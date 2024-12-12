@@ -1,22 +1,14 @@
 <?php
-require_once('Router.php');
-
-// Create a new Router instance
+require_once 'Router.php';
+// Usage example
 $router = new Router();
-
-// Define a route that responds to GET requests
-$router->get('/user/{id}', function ($id) {
-    echo "User ID (GET): " . $id;
+$router->get('/', function () {
+    echo 'Home';
 });
-
-// Define a route that responds to POST requests
 $router->post('/user/{id}', function ($id) {
-    echo "User ID (POST): " . $id;
+    echo 'User ' . $id;
 });
-
-// Define a route that responds to both GET and POST requests
-$router->both('/submit', function () {
-    echo "Form Submitted!";
+$router->get('/user/{id}/{name}', function ($id, $name) {
+    echo 'User ' . $id . ' ' . $name;
 });
-
-$router->dispatch();
+$router->run();

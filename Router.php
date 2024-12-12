@@ -1,64 +1,39 @@
 <?php
 
-class Router
-{
+class Router {
     private $routes = [];
 
-    // Register a new route with an optional regex pattern
-    public function addRoute($method, $pattern, $callback)
-    {
-        $this->routes[] = [
-            'method' => strtoupper($method),
-            'pattern' => $pattern,
-            'callback' => $callback
-        ];
+    public function get($path, $callback) {
+        $this->addRoute('GET', $path, $callback);
     }
 
-    // Match the incoming request to the registered routes
-    public function dispatch($method, $uri)
-    {
-        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $method = $_SERVER['REQUEST_METHOD'];
-        $method = strtoupper($method); // Normalize HTTP method (GET, POST, etc.)
-        foreach ($this->routes as $route) {
-            if ($route['method'] === $method) {
-                if (preg_match($this->createPattern($route['pattern']), $uri, $matches)) {
-                    array_shift($matches); // Remove the full match (it's always at index 0)
-                    return call_user_func_array($route['callback'], $matches);
-                }
+    public function post($path, $callback) {
+        $this->addRoute('POST', $path, $callback);
+    }
+
+    public function both($path, $callback) {
+        $this->addRoute('GET', $path, $callback);
+        $this->addRoute('POST', $path, $callback);
+    }
+    
+    private function addRoute($method, $path, $callback) {
+        $path = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '(?P<\1>[a-zA-Z0-9_]+)', $path);
+        $this->routes[$method][$path] = $callback;
+    }
+
+    public function run() {
+        $requestMethod = $_SERVER['REQUEST_METHOD'];
+        $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+        foreach ($this->routes[$requestMethod] as $path => $callback) {
+            if (preg_match('#^' . $path . '$#', $requestUri, $matches)) {
+                $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
+                call_user_func_array($callback, $params);
+                return;
             }
         }
-        // If no route matches, return 404 response
+
         http_response_code(404);
-        echo "404 Not Found";
-    }
-
-    // Converts dynamic parameters in routes to regex patterns
-    private function createPattern($pattern)
-    {
-        // Replace placeholders like {id} with regex patterns
-        return '/^' . preg_replace_callback('/{([a-zA-Z0-9_]+)}/', function ($matches) {
-            return '(?P<' . $matches[1] . '>[^/]+)';
-        }, $pattern) . '$/';
-    }
-
-    // Shorthand method for GET requests
-    public function get($pattern, $callback)
-    {
-        $this->addRoute('GET', $pattern, $callback);
-    }
-
-    // Shorthand method for POST requests
-    public function post($pattern, $callback)
-    {
-        $this->addRoute('POST', $pattern, $callback);
-    }
-
-    // Shorthand method for both GET and POST requests
-    public function both($pattern, $callback)
-    {
-        $this->addRoute('GET', $pattern, $callback);
-        $this->addRoute('POST', $pattern, $callback);
+        echo '404 Not Found';
     }
 }
-
