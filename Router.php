@@ -17,6 +17,8 @@ class Router
     // Match the incoming request to the registered routes
     public function dispatch($method, $uri)
     {
+        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $method = $_SERVER['REQUEST_METHOD'];
         $method = strtoupper($method); // Normalize HTTP method (GET, POST, etc.)
         foreach ($this->routes as $route) {
             if ($route['method'] === $method) {
@@ -38,6 +40,25 @@ class Router
         return '/^' . preg_replace_callback('/{([a-zA-Z0-9_]+)}/', function ($matches) {
             return '(?P<' . $matches[1] . '>[^/]+)';
         }, $pattern) . '$/';
+    }
+
+    // Shorthand method for GET requests
+    public function get($pattern, $callback)
+    {
+        $this->addRoute('GET', $pattern, $callback);
+    }
+
+    // Shorthand method for POST requests
+    public function post($pattern, $callback)
+    {
+        $this->addRoute('POST', $pattern, $callback);
+    }
+
+    // Shorthand method for both GET and POST requests
+    public function both($pattern, $callback)
+    {
+        $this->addRoute('GET', $pattern, $callback);
+        $this->addRoute('POST', $pattern, $callback);
     }
 }
 

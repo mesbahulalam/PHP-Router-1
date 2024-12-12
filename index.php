@@ -4,23 +4,19 @@ require_once('Router.php');
 // Create a new Router instance
 $router = new Router();
 
-// Define a route with dynamic segments
-$router->addRoute('GET', '/user/{id}', function ($id) {
-    echo "User ID: " . $id;
+// Define a route that responds to GET requests
+$router->get('/user/{id}', function ($id) {
+    echo "User ID (GET): " . $id;
 });
 
-// Define a route with regex pattern for matching numbers
-$router->addRoute('GET', '/post/{id:\d+}', function ($id) {
-    echo "Post ID: " . $id;
+// Define a route that responds to POST requests
+$router->post('/user/{id}', function ($id) {
+    echo "User ID (POST): " . $id;
 });
 
-// Define a route with a regex pattern for an email address
-$router->addRoute('GET', '/profile/{email:[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}}', function ($email) {
-    echo "Profile Email: " . $email;
+// Define a route that responds to both GET and POST requests
+$router->both('/submit', function () {
+    echo "Form Submitted!";
 });
 
-// Dispatch the current request
-$method = $_SERVER['REQUEST_METHOD'];
-$uri = $_SERVER['REQUEST_URI'];
-
-$router->dispatch($method, $uri);
+$router->dispatch();
